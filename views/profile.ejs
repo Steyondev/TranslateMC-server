@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - Translation Platform</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <% activePage = 'profile' %>
+  <%- include('_navbar') %>
+
+  <main class="main-content">
+    <% if (messages.error) { %>
+      <div class="alert alert-error">
+        <span class="alert-icon">⚠️</span>
+        <%= messages.error %>
+      </div>
+    <% } %>
+
+    <% if (messages.success) { %>
+      <div class="alert alert-success">
+        <span class="alert-icon">✓</span>
+        <%= messages.success %>
+      </div>
+    <% } %>
+
+    <div class="container">
+      <div class="page-header">
+        <div>
+          <h1>My Profile</h1>
+          <p>Manage your account settings</p>
+        </div>
+      </div>
+
+      <div class="profile-grid">
+        <!-- User Information Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Account Information</h2>
+          </div>
+          <div class="card-body">
+            <div class="info-group">
+              <label>Username</label>
+              <p class="info-value"><%= user.username %></p>
+            </div>
+            <div class="info-group">
+              <label>Email</label>
+              <p class="info-value"><%= user.email %></p>
+            </div>
+            <div class="info-group">
+              <label>Role</label>
+              <p class="info-value">
+                <span class="role-badge role-<%= user.role.toLowerCase() %>">
+                  <%= user.role %>
+                </span>
+              </p>
+            </div>
+            <div class="info-group">
+              <label>Account Status</label>
+              <p class="info-value">
+                <% if (user.is_active) { %>
+                  <span style="color: var(--success);">✓ Active</span>
+                <% } else { %>
+                  <span style="color: var(--danger);">✗ Inactive</span>
+                <% } %>
+              </p>
+            </div>
+            <div class="info-group">
+              <label>Member Since</label>
+              <p class="info-value"><%= new Date(user.created_at).toLocaleDateString() %></p>
+            </div>
+            <% if (user.last_login) { %>
+              <div class="info-group">
+                <label>Last Login</label>
+                <p class="info-value"><%= new Date(user.last_login).toLocaleString() %></p>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Change Password Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Change Password</h2>
+          </div>
+          <div class="card-body">
+            <form action="/profile/change-password" method="POST">
+              <div class="form-group">
+                <label for="currentPassword">Current Password *</label>
+                <input 
+                  type="password" 
+                  id="currentPassword" 
+                  name="currentPassword" 
+                  required 
+                  placeholder="Enter your current password"
+                >
+              </div>
+
+              <div class="form-group">
+                <label for="newPassword">New Password *</label>
+                <input 
+                  type="password" 
+                  id="newPassword" 
+                  name="newPassword" 
+                  required 
+                  placeholder="Enter your new password (min. 6 characters)"
+                >
+                <small>Must be at least 6 characters long</small>
+              </div>
+
+              <div class="form-group">
+                <label for="confirmPassword">Confirm New Password *</label>
+                <input 
+                  type="password" 
+                  id="confirmPassword" 
+                  name="confirmPassword" 
+                  required 
+                  placeholder="Confirm your new password"
+                >
+              </div>
+
+              <button type="submit" class="btn btn-primary">Change Password</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/theme.js"></script>
+</body>
+</html>

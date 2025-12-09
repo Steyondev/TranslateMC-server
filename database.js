@@ -156,6 +156,11 @@ const updateUser = (userId, username, email, role) => {
   return db.prepare('UPDATE users SET username = ?, email = ?, role = ? WHERE id = ?').run(username, email, role, userId);
 };
 
+const updateUserPassword = (userId, newPassword) => {
+  const hashedPassword = bcrypt.hashSync(newPassword, 10);
+  return db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hashedPassword, userId);
+};
+
 const toggleUserActive = (userId) => {
   return db.prepare('UPDATE users SET is_active = NOT is_active WHERE id = ?').run(userId);
 };
@@ -364,6 +369,7 @@ module.exports = {
   getAllUsers,
   updateUserRole,
   updateUser,
+  updateUserPassword,
   toggleUserActive,
   updateLastLogin,
   deleteUser,

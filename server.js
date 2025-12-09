@@ -14,6 +14,7 @@ const {
   getAllUsers,
   updateUserRole,
   updateUser,
+  updateUserPassword,
   toggleUserActive,
   updateLastLogin,
   deleteUser,
@@ -640,6 +641,48 @@ app.put('/api/v1/translations/:keyId/:langCode', requireApiKey(['translate']), (
 // API Documentation
 app.get('/api/docs', requireAuth, (req, res) => {
   res.render('api-docs');
+});
+
+// ===== USER PROFILE / SETTINGS =====
+
+app.get('/profile', requireAuth, (req, res) => {
+  const user = findUserById(req.session.userId);
+  res.render('profile', { user });
+});
+
+app.post('/profile/change-password', requireAuth, (req, res) => {
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+  const user = findUserById(req.session.userId);
+
+  if (!user || !bcrypt.compareSync(currentPassword, user.password)) {
+    req.flash('error', 'Current password is incorrect');
+    return res.redirect('/profile');
+  }
+
+  if (newPassword !== confirmPassword) {
+    req.flash('error', 'New passwords do not match');
+    return res.redirect('/profile');
+  }
+
+  if (newPassword.length < 6) {
+    req.flash('error', 'Password must be at least 6 characters');
+    return res.redirect('/profile');
+  }
+
+  if (currentPassword === newPassword) {
+    req.flash('error', 'New password must be different from current password');
+    return res.redirect('/profile');
+  }
+
+  try {
+    updateUserPassword(req.session.userId, newPassword);
+    logActivity(req.session.userId, 'change_password', 'User changed their password');
+    req.flash('success', 'Password changed successfully');
+  } catch (error) {
+    req.flash('error', 'Error changing password');
+  }
+
+  res.redirect('/profile');
 });
 
 // Start server

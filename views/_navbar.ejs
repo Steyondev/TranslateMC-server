@@ -1,7 +1,7 @@
 <% if (currentUser) { %>
   <nav class="navbar">
     <div class="nav-container">
-      <a href="/dashboard" class="logo">🌐 TranslatePro</a>
+      <a href="/dashboard" class="logo">🌐 TranslateMC</a>
 
       <div class="nav-links">
         <a href="/dashboard" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>">
@@ -37,6 +37,9 @@
         <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle Dark Mode">
           <span class="theme-icon">🌙</span>
         </button>
+        <a href="/profile" class="nav-link" title="Profile Settings">
+          <span class="icon">⚙️</span>
+        </a>
         <span class="user-info">
           <span class="user-name"><%= currentUser.username %></span>
           <span class="user-role role-badge role-<%= currentUser.role %>"><%= currentUser.role %></span>

@@ -37,18 +37,52 @@
       </div>
 
       <div class="card">
+        <div class="sort-controls">
+          <label for="sortBy">Sort by:</label>
+          <select id="sortBy" onchange="sortTable(this.value)">
+            <option value="key">Key (A-Z)</option>
+            <option value="key-desc">Key (Z-A)</option>
+            <option value="progress">Progress (Low to High)</option>
+            <option value="progress-desc">Progress (High to Low)</option>
+            <option value="created">Created By (A-Z)</option>
+            <option value="created-desc">Created By (Z-A)</option>
+          </select>
+
+          <div class="filter-separator"></div>
+
+          <label for="filterStatus">Filter by Status:</label>
+          <select id="filterStatus" onchange="filterTable()">
+            <option value="all">All</option>
+            <option value="incomplete">Incomplete (< 100%)</option>
+            <option value="translated">Translated (100%)</option>
+            <option value="approved">Approved</option>
+            <option value="pending">Pending Review</option>
+          </select>
+        </div>
         <div class="table-container">
-          <table class="table">
+          <table class="table" id="translationsTable">
             <thead>
               <tr>
-                <th>Key</th>
+                <th>
+                  <a href="#" onclick="sortTable('key'); return false;" class="sortable-header">
+                    Key <span class="sort-icon">↕</span>
+                  </a>
+                </th>
                 <th>Description</th>
-                <th>Progress</th>
-                <th>Created By</th>
+                <th>
+                  <a href="#" onclick="sortTable('progress'); return false;" class="sortable-header">
+                    Progress <span class="sort-icon">↕</span>
+                  </a>
+                </th>
+                <th>
+                  <a href="#" onclick="sortTable('created'); return false;" class="sortable-header">
+                    Created By <span class="sort-icon">↕</span>
+                  </a>
+                </th>
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="translationsTableBody">
               <% if (translationKeys.length === 0) { %>
                 <tr>
                   <td colspan="5" class="empty-state">
@@ -57,14 +91,16 @@
                 </tr>
               <% } else { %>
                 <% translationKeys.forEach(key => { %>
-                  <tr>
+                  <% const progressPercent = (key.approved_count / languages.length * 100); %>
+                  <% const statusClass = progressPercent === 100 ? 'approved' : (progressPercent > 0 ? 'translated' : 'incomplete'); %>
+                  <tr data-key="<%= key.key %>" data-progress="<%= key.approved_count %>" data-created="<%= key.created_by_name || '' %>" data-status="<%= statusClass %>">
                     <td><code><%= key.key %></code></td>
                     <td><%= key.description || '-' %></td>
                     <td>
                       <div class="progress-info">
                         <span class="progress-text"><%= key.approved_count %>/<%= languages.length %> languages</span>
                         <div class="progress-bar">
-                          <div class="progress-fill" style="width: <%= (key.approved_count / languages.length * 100) %>%"></div>
+                          <div class="progress-fill" style="width: <% print(progressPercent) %>%"></div>
                         </div>
                       </div>
                     </td>
@@ -126,12 +162,114 @@
   <script src="/js/main.js"></script>
   <script src="/js/theme.js"></script>
   <script>
+    let currentSort = 'key';
+    let sortAscending = true;
+    let currentFilter = 'all';
+
     function openCreateModal() {
       document.getElementById('createModal').style.display = 'flex';
     }
 
     function closeCreateModal() {
       document.getElementById('createModal').style.display = 'none';
+    }
+
+    function sortTable(sortType) {
+      const tbody = document.getElementById('translationsTableBody');
+      const rows = Array.from(tbody.querySelectorAll('tr[data-key]'));
+
+      // Toggle ascending/descending if same sort type is clicked
+      if (currentSort === sortType) {
+        sortAscending = !sortAscending;
+      } else {
+        sortAscending = true;
+        currentSort = sortType;
+      }
+
+      rows.sort((a, b) => {
+        let aValue, bValue;
+
+        switch(sortType) {
+          case 'key':
+            aValue = a.dataset.key.toLowerCase();
+            bValue = b.dataset.key.toLowerCase();
+            break;
+          case 'key-desc':
+            aValue = a.dataset.key.toLowerCase();
+            bValue = b.dataset.key.toLowerCase();
+            return bValue.localeCompare(aValue);
+          case 'progress':
+            aValue = parseInt(a.dataset.progress);
+            bValue = parseInt(b.dataset.progress);
+            break;
+          case 'progress-desc':
+            aValue = parseInt(a.dataset.progress);
+            bValue = parseInt(b.dataset.progress);
+            return bValue - aValue;
+          case 'created':
+            aValue = a.dataset.created.toLowerCase();
+            bValue = b.dataset.created.toLowerCase();
+            break;
+          case 'created-desc':
+            aValue = a.dataset.created.toLowerCase();
+            bValue = b.dataset.created.toLowerCase();
+            return bValue.localeCompare(aValue);
+          default:
+            return 0;
+        }
+
+        if (typeof aValue === 'string') {
+          return sortAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+        } else {
+          return sortAscending ? aValue - bValue : bValue - aValue;
+        }
+      });
+
+      rows.forEach(row => tbody.appendChild(row));
+      applyFilter();
+    }
+
+    function filterTable() {
+      currentFilter = document.getElementById('filterStatus').value;
+      applyFilter();
+    }
+
+    function applyFilter() {
+      const tbody = document.getElementById('translationsTableBody');
+      const rows = tbody.querySelectorAll('tr[data-key]');
+
+      let visibleCount = 0;
+      rows.forEach(row => {
+        const status = row.dataset.status;
+        let show = false;
+
+        switch(currentFilter) {
+          case 'all':
+            show = true;
+            break;
+          case 'incomplete':
+            show = status === 'incomplete';
+            break;
+          case 'translated':
+            show = status === 'translated';
+            break;
+          case 'approved':
+            show = status === 'approved';
+            break;
+          case 'pending':
+            show = status === 'translated' || status === 'incomplete';
+            break;
+        }
+
+        row.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+      });
+
+      // Show empty message if no rows visible
+      const emptyRow = tbody.querySelector('tr[colspan]');
+      if (emptyRow) {
+        emptyRow.style.display = visibleCount === 0 ? '' : 'none';
+      }
     }
 
     window.onclick = function(event) {
