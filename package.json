@@ -7,7 +7,7 @@
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
-  "keywords": ["translation", "i18n", "crowdin"],
+  "keywords": ["translation"],
   "author": "",
   "license": "MIT",
   "dependencies": {
