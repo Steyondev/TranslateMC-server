@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Translation - <%= key.key %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <% activePage = 'translations' %>
+  <%- include('_navbar') %>
+
+  <main class="main-content">
+    <% if (messages.error) { %>
+      <div class="alert alert-error">
+        <span class="alert-icon">⚠️</span>
+        <%= messages.error %>
+      </div>
+    <% } %>
+
+    <% if (messages.success) { %>
+      <div class="alert alert-success">
+        <span class="alert-icon">✓</span>
+        <%= messages.success %>
+      </div>
+    <% } %>
+
+    <div class="container">
+      <div class="breadcrumb">
+        <a href="/translations">Translations</a> / <span><%= key.key %></span>
+      </div>
+
+      <div class="page-header">
+        <div>
+          <h1><code><%= key.key %></code></h1>
+          <% if (key.description) { %>
+            <p><%= key.description %></p>
+          <% } %>
+          <% if (key.context) { %>
+            <div class="context-box">
+              <strong>Context:</strong> <%= key.context %>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="translations-grid">
+        <% languages.forEach(lang => { %>
+          <% const translation = translations.find(t => t.language_id === lang.id); %>
+          <div class="translation-card">
+            <div class="translation-card-header">
+              <div class="language-info">
+                <span class="language-name"><%= lang.name %></span>
+                <code class="language-code"><%= lang.code %></code>
+              </div>
+              <% if (translation) { %>
+                <span class="status-badge status-<%= translation.status %>">
+                  <%= translation.status %>
+                </span>
+              <% } else { %>
+                <span class="status-badge status-missing">not translated</span>
+              <% } %>
+            </div>
+
+            <div class="translation-card-body">
+              <% if (hasPermission('translate')) { %>
+                <form action="/translations/<%= key.id %>/translate" method="POST">
+                  <input type="hidden" name="language_id" value="<%= lang.id %>">
+                  <div class="form-group">
+                    <textarea
+                      name="value"
+                      rows="3"
+                      placeholder="Enter translation for <%= lang.name %>..."
+                      class="translation-input"
+                    ><%= translation ? translation.value : '' %></textarea>
+                  </div>
+                  <div class="translation-actions">
+                    <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                  </div>
+                </form>
+
+                <% if (translation && translation.status === 'pending' && hasPermission('review')) { %>
+                  <form action="/translations/<%= translation.id %>/approve" method="POST" style="margin-top: 8px;">
+                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                  </form>
+                <% } %>
+
+                <% if (translation) { %>
+                  <div class="translation-meta">
+                    <% if (translation.translated_by_name) { %>
+                      <small>Translated by <%= translation.translated_by_name %></small>
+                    <% } %>
+                    <% if (translation.reviewed_by_name) { %>
+                      <small>Reviewed by <%= translation.reviewed_by_name %></small>
+                    <% } %>
+                  </div>
+                <% } %>
+              <% } else { %>
+                <div class="translation-view">
+                  <%= translation ? translation.value : 'Not translated yet' %>
+                </div>
+              <% } %>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/theme.js"></script>
+</body>
+</html>

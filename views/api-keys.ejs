@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Keys - Translation Platform</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <% activePage = 'api-keys' %>
+  <%- include('_navbar') %>
+
+  <main class="main-content">
+    <% if (messages.error) { %>
+      <div class="alert alert-error">
+        <span class="alert-icon">⚠️</span>
+        <%= messages.error %>
+      </div>
+    <% } %>
+
+    <% if (messages.success) { %>
+      <div class="alert alert-success">
+        <span class="alert-icon">✓</span>
+        <%= messages.success %>
+      </div>
+    <% } %>
+
+    <div class="container">
+      <div class="page-header">
+        <div>
+          <h1>API Keys</h1>
+          <p>Manage API keys for programmatic access</p>
+        </div>
+        <button class="btn btn-primary" onclick="openCreateModal()">+ Create API Key</button>
+      </div>
+
+      <div class="card">
+        <% if (apiKeys.length === 0) { %>
+          <div class="empty-state-large">
+            <div class="empty-icon">🔑</div>
+            <h3>No API Keys Yet</h3>
+            <p>Create your first API key to access the translation API programmatically</p>
+            <button class="btn btn-primary" onclick="openCreateModal()">Create API Key</button>
+          </div>
+        <% } else { %>
+          <div class="api-keys-list">
+            <% apiKeys.forEach(key => { %>
+              <div class="api-key-item">
+                <div class="api-key-header">
+                  <h3><%= key.name %></h3>
+                  <form action="/api-keys/<%= key.id %>/delete" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure?')">
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                  </form>
+                </div>
+
+                <div class="api-key-body">
+                  <div class="api-key-field">
+                    <label>API Key</label>
+                    <div class="key-display">
+                      <code class="key-value" id="key-<%= key.id %>"><%= key.key %></code>
+                      <button class="btn btn-sm" onclick="copyKey('<%= key.key %>', <%= key.id %>)">Copy</button>
+                    </div>
+                  </div>
+
+                  <div class="api-key-meta">
+                    <div class="meta-item">
+                      <span class="meta-label">Permissions:</span>
+                      <div class="permissions-list">
+                        <% JSON.parse(key.permissions).forEach(perm => { %>
+                          <span class="permission-badge"><%= perm %></span>
+                        <% }); %>
+                      </div>
+                    </div>
+                    <div class="meta-item">
+                      <span class="meta-label">Created:</span>
+                      <span><%= new Date(key.created_at).toLocaleDateString() %></span>
+                    </div>
+                    <% if (key.last_used) { %>
+                      <div class="meta-item">
+                        <span class="meta-label">Last used:</span>
+                        <span><%= new Date(key.last_used).toLocaleString() %></span>
+                      </div>
+                    <% } else { %>
+                      <div class="meta-item">
+                        <span class="meta-label">Last used:</span>
+                        <span class="text-muted">Never</span>
+                      </div>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </main>
+
+  <!-- Create Modal -->
+  <div id="createModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Create New API Key</h2>
+        <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+      </div>
+      <form action="/api-keys/create" method="POST">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="name">Key Name *</label>
+            <input type="text" id="name" name="name" required placeholder="e.g., Production App, Development">
+          </div>
+
+          <div class="form-group">
+            <label>Permissions *</label>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" name="permissions" value="view" checked>
+                <span>View - Read translations</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="permissions" value="translate">
+                <span>Translate - Create and update translations</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="permissions" value="manage_translations">
+                <span>Manage Translations - Create and delete keys</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="alert alert-info">
+            <span class="alert-icon">ℹ️</span>
+            Make sure to copy your API key after creation. You won't be able to see it again!
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn" onclick="closeCreateModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Key</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/theme.js"></script>
+  <script>
+    function openCreateModal() {
+      document.getElementById('createModal').style.display = 'flex';
+    }
+
+    function closeCreateModal() {
+      document.getElementById('createModal').style.display = 'none';
+    }
+
+    function copyKey(key, keyId) {
+      navigator.clipboard.writeText(key).then(() => {
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.classList.add('btn-success');
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.classList.remove('btn-success');
+        }, 2000);
+      });
+    }
+
+    window.onclick = function(event) {
+      const modal = document.getElementById('createModal');
+      if (event.target === modal) {
+        closeCreateModal();
+      }
+    }
+  </script>
+</body>
+</html>

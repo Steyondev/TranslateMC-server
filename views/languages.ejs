@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Languages - Translation Platform</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <% activePage = 'languages' %>
+  <%- include('_navbar') %>
+
+  <main class="main-content">
+    <% if (messages.error) { %>
+      <div class="alert alert-error">
+        <span class="alert-icon">⚠️</span>
+        <%= messages.error %>
+      </div>
+    <% } %>
+
+    <% if (messages.success) { %>
+      <div class="alert alert-success">
+        <span class="alert-icon">✓</span>
+        <%= messages.success %>
+      </div>
+    <% } %>
+
+    <div class="container">
+      <div class="page-header">
+        <div>
+          <h1>Languages</h1>
+          <p>Manage supported languages for translations</p>
+        </div>
+        <button class="btn btn-primary" onclick="openCreateModal()">+ Add Language</button>
+      </div>
+
+      <div class="card">
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Source Language</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (languages.length === 0) { %>
+                <tr>
+                  <td colspan="4" class="empty-state">
+                    No languages yet. Add your first one!
+                  </td>
+                </tr>
+              <% } else { %>
+                <% languages.forEach(lang => { %>
+                  <tr>
+                    <td><code><%= lang.code %></code></td>
+                    <td><%= lang.name %></td>
+                    <td>
+                      <% if (lang.is_source) { %>
+                        <span class="badge badge-primary">Source</span>
+                      <% } else { %>
+                        <span class="text-muted">-</span>
+                      <% } %>
+                    </td>
+                    <td>
+                      <div class="action-buttons">
+                        <button class="btn btn-sm" data-lang-id="<%= lang.id %>" data-lang-code="<%= lang.code %>" data-lang-name="<%= lang.name %>" data-lang-source="<%= lang.is_source %>" data-lang-head="<%= lang.minecraft_head || '' %>" onclick="openEditModalFromButton(this)">Edit</button>
+                        <form action="/languages/<%= lang.id %>/delete" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure? This will delete all translations in this language!')">
+                          <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                <% }); %>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 24px;">
+        <div class="card-body">
+          <h3>Common Language Codes</h3>
+          <div class="language-suggestions">
+            <span class="lang-suggestion">en - English</span>
+            <span class="lang-suggestion">de - Deutsch</span>
+            <span class="lang-suggestion">fr - Français</span>
+            <span class="lang-suggestion">es - Español</span>
+            <span class="lang-suggestion">it - Italiano</span>
+            <span class="lang-suggestion">pt - Português</span>
+            <span class="lang-suggestion">nl - Nederlands</span>
+            <span class="lang-suggestion">pl - Polski</span>
+            <span class="lang-suggestion">ru - Русский</span>
+            <span class="lang-suggestion">zh - 中文</span>
+            <span class="lang-suggestion">ja - 日本語</span>
+            <span class="lang-suggestion">ko - 한국어</span>
+            <span class="lang-suggestion">ar - العربية</span>
+            <span class="lang-suggestion">tr - Türkçe</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Create Modal -->
+  <div id="createModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Add New Language</h2>
+        <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+      </div>
+      <form action="/languages/create" method="POST">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="code">Language Code *</label>
+            <input type="text" id="code" name="code" required placeholder="e.g., en, de, fr" maxlength="10">
+            <small>Use ISO 639-1 codes (2 letters) or custom codes</small>
+          </div>
+
+          <div class="form-group">
+            <label for="name">Language Name *</label>
+            <input type="text" id="name" name="name" required placeholder="e.g., English, Deutsch">
+          </div>
+
+          <div class="form-group">
+            <label for="minecraft_head">Minecraft Head (Base64)</label>
+            <textarea id="minecraft_head" name="minecraft_head" rows="3" placeholder="e.g., eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvLi4uIn19fQ=="></textarea>
+            <small>Optional: Base64-encoded Minecraft head texture value</small>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" name="is_source" value="1">
+              <span>Mark as source language (base language for translations)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn" onclick="closeCreateModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Language</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Edit Language</h2>
+        <button class="modal-close" onclick="closeEditModal()">&times;</button>
+      </div>
+      <form id="editForm" method="POST">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="edit_code">Language Code *</label>
+            <input type="text" id="edit_code" name="code" required maxlength="10">
+          </div>
+
+          <div class="form-group">
+            <label for="edit_name">Language Name *</label>
+            <input type="text" id="edit_name" name="name" required>
+          </div>
+
+          <div class="form-group">
+            <label for="edit_minecraft_head">Minecraft Head (Base64)</label>
+            <textarea id="edit_minecraft_head" name="minecraft_head" rows="3" placeholder="e.g., eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvLi4uIn19fQ=="></textarea>
+            <small>Optional: Base64-encoded Minecraft head texture value</small>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="edit_is_source" name="is_source" value="1">
+              <span>Mark as source language</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn" onclick="closeEditModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update Language</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/theme.js"></script>
+  <script>
+    function openCreateModal() {
+      document.getElementById('createModal').style.display = 'flex';
+    }
+
+    function closeCreateModal() {
+      document.getElementById('createModal').style.display = 'none';
+    }
+
+    function openEditModalFromButton(button) {
+      const id = button.dataset.langId;
+      const code = button.dataset.langCode;
+      const name = button.dataset.langName;
+      const isSource = button.dataset.langSource === '1';
+      const minecraftHead = button.dataset.langHead;
+
+      openEditModal(id, code, name, isSource, minecraftHead);
+    }
+
+    function openEditModal(id, code, name, isSource, minecraftHead) {
+      const modal = document.getElementById('editModal');
+      const form = document.getElementById('editForm');
+
+      form.action = '/languages/' + id + '/update';
+      document.getElementById('edit_code').value = code;
+      document.getElementById('edit_name').value = name;
+      document.getElementById('edit_is_source').checked = isSource === true || isSource === 1;
+      document.getElementById('edit_minecraft_head').value = minecraftHead || '';
+
+      modal.style.display = 'flex';
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+      const createModal = document.getElementById('createModal');
+      const editModal = document.getElementById('editModal');
+
+      if (event.target === createModal) {
+        closeCreateModal();
+      }
+      if (event.target === editModal) {
+        closeEditModal();
+      }
+    }
+  </script>
+</body>
+</html>

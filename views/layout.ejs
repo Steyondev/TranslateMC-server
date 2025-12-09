@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || 'Translation Platform' %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <% if (currentUser) { %>
+    <nav class="navbar">
+      <div class="nav-container">
+        <a href="/dashboard" class="logo">TranslatePro</a>
+
+        <div class="nav-links">
+          <a href="/dashboard" class="nav-link">
+            <span class="icon">📊</span> Dashboard
+          </a>
+          <a href="/translations" class="nav-link">
+            <span class="icon">🌐</span> Translations
+          </a>
+          <a href="/api-keys" class="nav-link">
+            <span class="icon">🔑</span> API Keys
+          </a>
+          <% if (hasPermission('manage_users')) { %>
+            <a href="/users" class="nav-link">
+              <span class="icon">👥</span> Users
+            </a>
+          <% } %>
+          <a href="/api/docs" class="nav-link">
+            <span class="icon">📚</span> API Docs
+          </a>
+        </div>
+
+        <div class="nav-user">
+          <span class="user-info">
+            <span class="user-name"><%= currentUser.username %></span>
+            <span class="user-role role-badge role-<%= currentUser.role %>"><%= currentUser.role %></span>
+          </span>
+          <a href="/logout" class="btn-logout">Logout</a>
+        </div>
+      </div>
+    </nav>
+  <% } %>
+
+  <main class="main-content">
+    <% if (messages.error) { %>
+      <div class="alert alert-error">
+        <span class="alert-icon">⚠️</span>
+        <%= messages.error %>
+      </div>
+    <% } %>
+
+    <% if (messages.success) { %>
+      <div class="alert alert-success">
+        <span class="alert-icon">✓</span>
+        <%= messages.success %>
+      </div>
+    <% } %>
+
+    <%- body %>
+  </main>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

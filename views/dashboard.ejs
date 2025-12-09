@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Translation Platform</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <% activePage = 'dashboard' %>
+  <%- include('_navbar') %>
+
+  <main class="main-content">
+    <% if (messages.error) { %>
+      <div class="alert alert-error">
+        <span class="alert-icon">⚠️</span>
+        <%= messages.error %>
+      </div>
+    <% } %>
+
+    <% if (messages.success) { %>
+      <div class="alert alert-success">
+        <span class="alert-icon">✓</span>
+        <%= messages.success %>
+      </div>
+    <% } %>
+
+    <div class="container">
+      <div class="page-header">
+        <h1>Dashboard</h1>
+        <p>Welcome back, <%= currentUser.username %>!</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">📝</div>
+          <div class="stat-info">
+            <div class="stat-value"><%= stats.total_keys %></div>
+            <div class="stat-label">Translation Keys</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🌍</div>
+          <div class="stat-info">
+            <div class="stat-value"><%= stats.total_languages %></div>
+            <div class="stat-label">Languages</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-info">
+            <div class="stat-value"><%= stats.approved_translations %></div>
+            <div class="stat-label">Approved</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-info">
+            <div class="stat-value"><%= stats.pending_translations %></div>
+            <div class="stat-label">Pending</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h2>Recent Translation Keys</h2>
+            <a href="/translations" class="btn btn-sm">View All</a>
+          </div>
+          <div class="card-body">
+            <% if (translationKeys.length === 0) { %>
+              <p class="empty-state">No translation keys yet. Create your first one!</p>
+            <% } else { %>
+              <div class="list">
+                <% translationKeys.forEach(key => { %>
+                  <div class="list-item">
+                    <div class="list-item-content">
+                      <div class="list-item-title"><%= key.key %></div>
+                      <div class="list-item-subtitle"><%= key.description || 'No description' %></div>
+                    </div>
+                    <div class="list-item-meta">
+                      <span class="badge"><%= key.approved_count %>/<%= key.translation_count %> approved</span>
+                    </div>
+                  </div>
+                <% }); %>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h2>Recent Activity</h2>
+          </div>
+          <div class="card-body">
+            <% if (recentActivity.length === 0) { %>
+              <p class="empty-state">No recent activity</p>
+            <% } else { %>
+              <div class="activity-list">
+                <% recentActivity.forEach(activity => { %>
+                  <div class="activity-item">
+                    <div class="activity-icon">
+                      <% if (activity.action === 'login') { %>🔓
+                      <% } else if (activity.action === 'translate') { %>✏️
+                      <% } else if (activity.action === 'approve') { %>✅
+                      <% } else if (activity.action === 'create_key') { %>➕
+                      <% } else if (activity.action === 'delete_key') { %>🗑️
+                      <% } else { %>📌<% } %>
+                    </div>
+                    <div class="activity-content">
+                      <div class="activity-user"><%= activity.username || 'System' %></div>
+                      <div class="activity-text"><%= activity.details || activity.action %></div>
+                      <div class="activity-time"><%= new Date(activity.created_at).toLocaleString() %></div>
+                    </div>
+                  </div>
+                <% }); %>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/theme.js"></script>
+</body>
+</html>

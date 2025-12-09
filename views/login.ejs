@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Translation Platform</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="auth-page">
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h1>🌐 TranslatePro</h1>
+        <p>Sign in to your account</p>
+      </div>
+
+      <% if (messages.error) { %>
+        <div class="alert alert-error">
+          <span class="alert-icon">⚠️</span>
+          <%= messages.error %>
+        </div>
+      <% } %>
+
+      <% if (messages.success) { %>
+        <div class="alert alert-success">
+          <span class="alert-icon">✓</span>
+          <%= messages.success %>
+        </div>
+      <% } %>
+
+      <form action="/login" method="POST" class="auth-form">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" required autofocus>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+      </form>
+
+      <div class="auth-footer">
+      </div>
+    </div>
+  </div>
+</body>
+</html>

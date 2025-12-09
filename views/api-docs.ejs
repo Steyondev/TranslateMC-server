@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Documentation - Translation Platform</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <% activePage = 'api-docs' %>
+  <%- include('_navbar') %>
+
+  <main class="main-content">
+    <div class="container">
+      <div class="page-header">
+        <h1>API Documentation</h1>
+        <p>REST API for programmatic access to translations</p>
+      </div>
+
+      <div class="docs-container">
+        <div class="docs-section">
+          <h2>Authentication</h2>
+          <p>All API requests require authentication using an API key. Include your API key in the request header:</p>
+          <div class="code-block">
+            <code>X-API-Key: your_api_key_here</code>
+          </div>
+          <p>Alternatively, you can pass it as a query parameter:</p>
+          <div class="code-block">
+            <code>?api_key=your_api_key_here</code>
+          </div>
+        </div>
+
+        <div class="docs-section">
+          <h2>Base URL</h2>
+          <div class="code-block">
+            <code><%= typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000' %>/api/v1</code>
+          </div>
+        </div>
+
+        <div class="api-endpoint">
+          <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="endpoint-path">/api/v1/translations/:langCode</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Get all translations for a specific language</p>
+
+            <h4>Parameters</h4>
+            <ul>
+              <li><code>langCode</code> - Language code (e.g., en, de, fr)</li>
+            </ul>
+
+            <h4>Required Permissions</h4>
+            <span class="permission-badge">view</span>
+
+            <h4>Example Request</h4>
+            <div class="code-block">
+<pre>curl -X GET "http://localhost:3000/api/v1/translations/en" \
+  -H "X-API-Key: your_api_key_here"</pre>
+            </div>
+
+            <h4>Example Response</h4>
+            <div class="code-block">
+<pre>{
+  "language": "en",
+  "translations": {
+    "homepage.welcome": "Welcome to our platform",
+    "homepage.subtitle": "Start translating today",
+    "nav.home": "Home",
+    "nav.about": "About"
+  }
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="api-endpoint">
+          <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="endpoint-path">/api/v1/keys</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Get all translation keys with translations in all languages</p>
+
+            <h4>Required Permissions</h4>
+            <span class="permission-badge">view</span>
+
+            <h4>Example Request</h4>
+            <div class="code-block">
+<pre>curl -X GET "http://localhost:3000/api/v1/keys" \
+  -H "X-API-Key: your_api_key_here"</pre>
+            </div>
+
+            <h4>Example Response</h4>
+            <div class="code-block">
+<pre>{
+  "keys": [
+    {
+      "id": 1,
+      "key": "homepage.welcome",
+      "description": "Welcome message on homepage",
+      "context": "Shown at the top of the page",
+      "translations": {
+        "en": {
+          "value": "Welcome",
+          "status": "approved"
+        },
+        "de": {
+          "value": "Willkommen",
+          "status": "approved"
+        }
+      }
+    }
+  ],
+  "languages": [
+    { "code": "en", "name": "English" },
+    { "code": "de", "name": "Deutsch" }
+  ]
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="api-endpoint">
+          <div class="endpoint-header">
+            <span class="method method-post">POST</span>
+            <span class="endpoint-path">/api/v1/keys</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Create a new translation key</p>
+
+            <h4>Required Permissions</h4>
+            <span class="permission-badge">manage_translations</span>
+
+            <h4>Request Body</h4>
+            <div class="code-block">
+<pre>{
+  "key": "homepage.welcome",
+  "description": "Welcome message",
+  "context": "Optional context for translators"
+}</pre>
+            </div>
+
+            <h4>Example Request</h4>
+            <div class="code-block">
+<pre>curl -X POST "http://localhost:3000/api/v1/keys" \
+  -H "X-API-Key: your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{"key": "homepage.welcome", "description": "Welcome message"}'</pre>
+            </div>
+
+            <h4>Example Response</h4>
+            <div class="code-block">
+<pre>{
+  "success": true,
+  "id": 1,
+  "key": "homepage.welcome"
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="api-endpoint">
+          <div class="endpoint-header">
+            <span class="method method-put">PUT</span>
+            <span class="endpoint-path">/api/v1/translations/:keyId/:langCode</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Create or update a translation for a specific key and language</p>
+
+            <h4>Parameters</h4>
+            <ul>
+              <li><code>keyId</code> - Translation key ID</li>
+              <li><code>langCode</code> - Language code (e.g., en, de, fr)</li>
+            </ul>
+
+            <h4>Required Permissions</h4>
+            <span class="permission-badge">translate</span>
+
+            <h4>Request Body</h4>
+            <div class="code-block">
+<pre>{
+  "value": "Welcome to our platform"
+}</pre>
+            </div>
+
+            <h4>Example Request</h4>
+            <div class="code-block">
+<pre>curl -X PUT "http://localhost:3000/api/v1/translations/1/en" \
+  -H "X-API-Key: your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{"value": "Welcome to our platform"}'</pre>
+            </div>
+
+            <h4>Example Response</h4>
+            <div class="code-block">
+<pre>{
+  "success": true,
+  "key_id": "1",
+  "language": "en",
+  "value": "Welcome to our platform"
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="docs-section">
+          <h2>Languages</h2>
+        </div>
+
+        <div class="api-endpoint">
+          <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="endpoint-path">/api/v1/languages</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Get all languages</p>
+
+            <h4>Required Permissions</h4>
+            <span class="permission-badge">view</span>
+
+            <h4>Example Request</h4>
+            <div class="code-block">
+<pre>curl -X GET "http://localhost:3000/api/v1/languages" \
+  -H "X-API-Key: your_api_key_here"</pre>
+            </div>
+
+            <h4>Example Response</h4>
+            <div class="code-block">
+<pre>{
+  "languages": [
+    {
+      "id": 1,
+      "code": "en",
+      "name": "English",
+      "is_source": true,
+      "minecraft_head": null
+    },
+    {
+      "id": 2,
+      "code": "de",
+      "name": "Deutsch",
+      "is_source": false,
+      "minecraft_head": "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvLi4uIn19fQ=="
+    }
+  ]
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="api-endpoint">
+          <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="endpoint-path">/api/v1/languages/:code</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Get a single language by code</p>
+
+            <h4>Parameters</h4>
+            <ul>
+              <li><code>code</code> - Language code (e.g., en, de, fr)</li>
+            </ul>
+
+            <h4>Required Permissions</h4>
+            <span class="permission-badge">view</span>
+
+            <h4>Example Request</h4>
+            <div class="code-block">
+<pre>curl -X GET "http://localhost:3000/api/v1/languages/de" \
+  -H "X-API-Key: your_api_key_here"</pre>
+            </div>
+
+            <h4>Example Response</h4>
+            <div class="code-block">
+<pre>{
+  "id": 2,
+  "code": "de",
+  "name": "Deutsch",
+  "is_source": false,
+  "minecraft_head": "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvLi4uIn19fQ=="
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="api-endpoint">
+          <div class="endpoint-header">
+            <span class="method method-post">POST</span>
+            <span class="endpoint-path">/api/v1/languages</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Create a new language</p>
+
+            <h4>Required Permissions</h4>
+            <span class="permission-badge">manage_languages</span>
+
+            <h4>Request Body</h4>
+            <div class="code-block">
+<pre>{
+  "code": "de",
+  "name": "Deutsch",
+  "is_source": false,
+  "minecraft_head": "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvLi4uIn19fQ=="
+}</pre>
+            </div>
+
+            <h4>Example Request</h4>
+            <div class="code-block">
+<pre>curl -X POST "http://localhost:3000/api/v1/languages" \
+  -H "X-API-Key: your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{"code": "de", "name": "Deutsch", "is_source": false}'</pre>
+            </div>
+
+            <h4>Example Response</h4>
+            <div class="code-block">
+<pre>{
+  "success": true,
+  "id": 2,
+  "code": "de",
+  "name": "Deutsch",
+  "is_source": false,
+  "minecraft_head": null
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="api-endpoint">
+          <div class="endpoint-header">
+            <span class="method method-put">PUT</span>
+            <span class="endpoint-path">/api/v1/languages/:code</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Update a language</p>
+
+            <h4>Parameters</h4>
+            <ul>
+              <li><code>code</code> - Language code (e.g., en, de, fr)</li>
+            </ul>
+
+            <h4>Required Permissions</h4>
+            <span class="permission-badge">manage_languages</span>
+
+            <h4>Request Body</h4>
+            <div class="code-block">
+<pre>{
+  "name": "Deutsch (Deutschland)",
+  "is_source": false,
+  "minecraft_head": "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvLi4uIn19fQ=="
+}</pre>
+            </div>
+
+            <h4>Example Request</h4>
+            <div class="code-block">
+<pre>curl -X PUT "http://localhost:3000/api/v1/languages/de" \
+  -H "X-API-Key: your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Deutsch (Deutschland)", "is_source": false}'</pre>
+            </div>
+
+            <h4>Example Response</h4>
+            <div class="code-block">
+<pre>{
+  "success": true,
+  "id": 2,
+  "code": "de",
+  "name": "Deutsch (Deutschland)",
+  "is_source": false,
+  "minecraft_head": null
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="api-endpoint">
+          <div class="endpoint-header">
+            <span class="method method-delete">DELETE</span>
+            <span class="endpoint-path">/api/v1/languages/:code</span>
+          </div>
+          <div class="endpoint-body">
+            <p>Delete a language and all its translations</p>
+
+            <h4>Parameters</h4>
+            <ul>
+              <li><code>code</code> - Language code (e.g., en, de, fr)</li>
+            </ul>
+
+            <h4>Required Permissions</h4>
+            <span class="permission-badge">manage_languages</span>
+
+            <h4>Example Request</h4>
+            <div class="code-block">
+<pre>curl -X DELETE "http://localhost:3000/api/v1/languages/de" \
+  -H "X-API-Key: your_api_key_here"</pre>
+            </div>
+
+            <h4>Example Response</h4>
+            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "Language deleted successfully"
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="docs-section">
+          <h2>Error Responses</h2>
+
+          <h4>401 Unauthorized</h4>
+          <div class="code-block">
+<pre>{
+  "error": "Invalid API key",
+  "message": "The provided API key is not valid"
+}</pre>
+          </div>
+
+          <h4>403 Forbidden</h4>
+          <div class="code-block">
+<pre>{
+  "error": "Insufficient permissions",
+  "message": "This API key does not have the required permissions",
+  "required": ["translate"],
+  "granted": ["view"]
+}</pre>
+          </div>
+
+          <h4>404 Not Found</h4>
+          <div class="code-block">
+<pre>{
+  "error": "Language not found"
+}</pre>
+          </div>
+        </div>
+
+        <div class="docs-section">
+          <h2>Code Examples</h2>
+
+          <h3>JavaScript / Node.js</h3>
+          <div class="code-block">
+<pre>const API_KEY = 'your_api_key_here';
+const BASE_URL = 'http://localhost:3000/api/v1';
+
+// Fetch translations
+async function getTranslations(langCode) {
+  const response = await fetch(`${BASE_URL}/translations/${langCode}`, {
+    headers: {
+      'X-API-Key': API_KEY
+    }
+  });
+  return await response.json();
+}
+
+// Create translation
+async function updateTranslation(keyId, langCode, value) {
+  const response = await fetch(`${BASE_URL}/translations/${keyId}/${langCode}`, {
+    method: 'PUT',
+    headers: {
+      'X-API-Key': API_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ value })
+  });
+  return await response.json();
+}
+
+// Usage
+const translations = await getTranslations('en');
+console.log(translations);</pre>
+          </div>
+
+          <h3>Python</h3>
+          <div class="code-block">
+<pre>import requests
+
+API_KEY = 'your_api_key_here'
+BASE_URL = 'http://localhost:3000/api/v1'
+
+# Fetch translations
+def get_translations(lang_code):
+    response = requests.get(
+        f'{BASE_URL}/translations/{lang_code}',
+        headers={'X-API-Key': API_KEY}
+    )
+    return response.json()
+
+# Create translation
+def update_translation(key_id, lang_code, value):
+    response = requests.put(
+        f'{BASE_URL}/translations/{key_id}/{lang_code}',
+        headers={
+            'X-API-Key': API_KEY,
+            'Content-Type': 'application/json'
+        },
+        json={'value': value}
+    )
+    return response.json()
+
+# Usage
+translations = get_translations('en')
+print(translations)</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/theme.js"></script>
+</body>
+</html>

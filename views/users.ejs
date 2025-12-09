@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Management - Translation Platform</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <% activePage = 'users' %>
+  <%- include('_navbar') %>
+
+  <main class="main-content">
+    <% if (messages.error) { %>
+      <div class="alert alert-error">
+        <span class="alert-icon">⚠️</span>
+        <%= messages.error %>
+      </div>
+    <% } %>
+
+    <% if (messages.success) { %>
+      <div class="alert alert-success">
+        <span class="alert-icon">✓</span>
+        <%= messages.success %>
+      </div>
+    <% } %>
+
+    <div class="container">
+      <div class="page-header">
+        <div>
+          <h1>User Management</h1>
+          <p>Manage users and their roles</p>
+        </div>
+        <button class="btn btn-primary" onclick="openCreateModal()">+ Add User</button>
+      </div>
+
+      <div class="card">
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Activity</th>
+                <th>Last Login</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% users.forEach(user => { %>
+                <tr class="<%= user.is_active ? '' : 'user-inactive' %>">
+                  <td>
+                    <a href="/users/<%= user.id %>" style="text-decoration: none; color: inherit;">
+                      <strong><%= user.username %></strong>
+                    </a>
+                  </td>
+                  <td><%= user.email %></td>
+                  <td>
+                    <% if (user.id === currentUser.id) { %>
+                      <span class="role-badge role-<%= user.role %>"><%= user.role %></span>
+                    <% } else { %>
+                      <form action="/users/<%= user.id %>/role" method="POST" style="display: inline;">
+                        <select name="role" class="role-select" onchange="this.form.submit()">
+                          <option value="<%= ROLES.ADMIN %>" <%= user.role === ROLES.ADMIN ? 'selected' : '' %>>Admin</option>
+                          <option value="<%= ROLES.MANAGER %>" <%= user.role === ROLES.MANAGER ? 'selected' : '' %>>Manager</option>
+                          <option value="<%= ROLES.TRANSLATOR %>" <%= user.role === ROLES.TRANSLATOR ? 'selected' : '' %>>Translator</option>
+                          <option value="<%= ROLES.VIEWER %>" <%= user.role === ROLES.VIEWER ? 'selected' : '' %>>Viewer</option>
+                        </select>
+                      </form>
+                    <% } %>
+                  </td>
+                  <td>
+                    <% if (user.is_active) { %>
+                      <span class="badge" style="background: var(--success); color: white;">Active</span>
+                    <% } else { %>
+                      <span class="badge" style="background: var(--danger); color: white;">Inactive</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <div style="font-size: 12px;">
+                      <div><%= user.translation_count %> translations</div>
+                      <div><%= user.api_key_count %> API keys</div>
+                    </div>
+                  </td>
+                  <td>
+                    <% if (user.last_login) { %>
+                      <%= new Date(user.last_login).toLocaleDateString() %>
+                    <% } else { %>
+                      <span class="text-muted">Never</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <div class="action-buttons">
+                      <a href="/users/<%= user.id %>" class="btn btn-sm">View</a>
+                      <% if (user.id !== currentUser.id) { %>
+                        <form action="/users/<%= user.id %>/toggle-active" method="POST" style="display: inline;">
+                          <button type="submit" class="btn btn-sm"><%= user.is_active ? 'Deactivate' : 'Activate' %></button>
+                        </form>
+                        <form action="/users/<%= user.id %>/delete" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure? This will delete all user data!')">
+                          <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        </form>
+                      <% } %>
+                    </div>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Create User Modal -->
+  <div id="createModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Add New User</h2>
+        <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+      </div>
+      <form action="/users/create" method="POST">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="username">Username *</label>
+            <input type="text" id="username" name="username" required>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input type="email" id="email" name="email" required>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password *</label>
+            <input type="password" id="password" name="password" required minlength="6">
+            <small>Minimum 6 characters</small>
+          </div>
+
+          <div class="form-group">
+            <label for="role">Role *</label>
+            <select id="role" name="role" required>
+              <option value="<%= ROLES.VIEWER %>">Viewer</option>
+              <option value="<%= ROLES.TRANSLATOR %>">Translator</option>
+              <option value="<%= ROLES.MANAGER %>">Manager</option>
+              <option value="<%= ROLES.ADMIN %>">Admin</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn" onclick="closeCreateModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/theme.js"></script>
+  <script>
+    function openCreateModal() {
+      document.getElementById('createModal').style.display = 'flex';
+    }
+
+    function closeCreateModal() {
+      document.getElementById('createModal').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+      const modal = document.getElementById('createModal');
+      if (event.target === modal) {
+        closeCreateModal();
+      }
+    }
+  </script>
+</body>
+</html>

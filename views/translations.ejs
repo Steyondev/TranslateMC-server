@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Translations - Translation Platform</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <% activePage = 'translations' %>
+  <%- include('_navbar') %>
+
+  <main class="main-content">
+    <% if (messages.error) { %>
+      <div class="alert alert-error">
+        <span class="alert-icon">⚠️</span>
+        <%= messages.error %>
+      </div>
+    <% } %>
+
+    <% if (messages.success) { %>
+      <div class="alert alert-success">
+        <span class="alert-icon">✓</span>
+        <%= messages.success %>
+      </div>
+    <% } %>
+
+    <div class="container">
+      <div class="page-header">
+        <div>
+          <h1>Translation Keys</h1>
+          <p>Manage all translation strings for your project</p>
+        </div>
+        <% if (hasPermission('manage_translations')) { %>
+          <button class="btn btn-primary" onclick="openCreateModal()">+ Add New Key</button>
+        <% } %>
+      </div>
+
+      <div class="card">
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Description</th>
+                <th>Progress</th>
+                <th>Created By</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (translationKeys.length === 0) { %>
+                <tr>
+                  <td colspan="5" class="empty-state">
+                    No translation keys yet. Create your first one!
+                  </td>
+                </tr>
+              <% } else { %>
+                <% translationKeys.forEach(key => { %>
+                  <tr>
+                    <td><code><%= key.key %></code></td>
+                    <td><%= key.description || '-' %></td>
+                    <td>
+                      <div class="progress-info">
+                        <span class="progress-text"><%= key.approved_count %>/<%= languages.length %> languages</span>
+                        <div class="progress-bar">
+                          <div class="progress-fill" style="width: <%= (key.approved_count / languages.length * 100) %>%"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td><%= key.created_by_name || '-' %></td>
+                    <td>
+                      <div class="action-buttons">
+                        <a href="/translations/<%= key.id %>" class="btn btn-sm">Edit</a>
+                        <% if (hasPermission('manage_translations')) { %>
+                          <form action="/translations/<%= key.id %>/delete" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure?')">
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                          </form>
+                        <% } %>
+                      </div>
+                    </td>
+                  </tr>
+                <% }); %>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Create Modal -->
+  <div id="createModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Add New Translation Key</h2>
+        <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+      </div>
+      <form action="/translations/create" method="POST">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="key">Key *</label>
+            <input type="text" id="key" name="key" required placeholder="e.g., homepage.welcome_message">
+            <small>Use dot notation for organization (e.g., page.section.key)</small>
+          </div>
+
+          <div class="form-group">
+            <label for="description">Description</label>
+            <input type="text" id="description" name="description" placeholder="A brief description of this translation">
+          </div>
+
+          <div class="form-group">
+            <label for="context">Context</label>
+            <textarea id="context" name="context" rows="3" placeholder="Additional context for translators"></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn" onclick="closeCreateModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Key</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/theme.js"></script>
+  <script>
+    function openCreateModal() {
+      document.getElementById('createModal').style.display = 'flex';
+    }
+
+    function closeCreateModal() {
+      document.getElementById('createModal').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+      const modal = document.getElementById('createModal');
+      if (event.target === modal) {
+        closeCreateModal();
+      }
+    }
+  </script>
+</body>
+</html>

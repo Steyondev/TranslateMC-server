@@ -1,0 +1,48 @@
+<% if (currentUser) { %>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/dashboard" class="logo">🌐 TranslatePro</a>
+
+      <div class="nav-links">
+        <a href="/dashboard" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>">
+          <span class="icon">📊</span> Dashboard
+        </a>
+        <% if (hasPermission('manage_users')) { %>
+          <a href="/admin" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'admin' ? 'active' : '' %>">
+            <span class="icon">⚡</span> Admin
+          </a>
+        <% } %>
+        <a href="/translations" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'translations' ? 'active' : '' %>">
+          <span class="icon">🌐</span> Translations
+        </a>
+        <% if (hasPermission('manage_languages')) { %>
+          <a href="/languages" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'languages' ? 'active' : '' %>">
+            <span class="icon">🗣️</span> Languages
+          </a>
+        <% } %>
+        <a href="/api-keys" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'api-keys' ? 'active' : '' %>">
+          <span class="icon">🔑</span> API Keys
+        </a>
+        <% if (hasPermission('manage_users')) { %>
+          <a href="/users" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'users' ? 'active' : '' %>">
+            <span class="icon">👥</span> Users
+          </a>
+        <% } %>
+        <a href="/api/docs" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'api-docs' ? 'active' : '' %>">
+          <span class="icon">📚</span> API Docs
+        </a>
+      </div>
+
+      <div class="nav-user">
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+          <span class="theme-icon">🌙</span>
+        </button>
+        <span class="user-info">
+          <span class="user-name"><%= currentUser.username %></span>
+          <span class="user-role role-badge role-<%= currentUser.role %>"><%= currentUser.role %></span>
+        </span>
+        <a href="/logout" class="btn-logout">Logout</a>
+      </div>
+    </div>
+  </nav>
+<% } %>

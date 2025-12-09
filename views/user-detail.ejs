@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= user.username %> - User Details</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('_navbar') %>
+
+  <main class="main-content">
+    <% if (messages.error) { %>
+      <div class="alert alert-error">
+        <span class="alert-icon">⚠️</span>
+        <%= messages.error %>
+      </div>
+    <% } %>
+
+    <% if (messages.success) { %>
+      <div class="alert alert-success">
+        <span class="alert-icon">✓</span>
+        <%= messages.success %>
+      </div>
+    <% } %>
+
+    <div class="container">
+      <div class="breadcrumb">
+        <a href="/users">Users</a> / <span><%= user.username %></span>
+      </div>
+
+      <div class="page-header">
+        <div>
+          <h1>
+            <%= user.username %>
+            <% if (!user.is_active) { %>
+              <span class="badge" style="background: var(--danger); color: white;">Inactive</span>
+            <% } %>
+          </h1>
+          <p><%= user.email %></p>
+        </div>
+        <div>
+          <% if (user.id !== currentUser.id) { %>
+            <button class="btn" onclick="openEditModal()">Edit User</button>
+            <form action="/users/<%= user.id %>/toggle-active" method="POST" style="display: inline;">
+              <button type="submit" class="btn"><%= user.is_active ? 'Deactivate' : 'Activate' %></button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">✏️</div>
+          <div class="stat-info">
+            <div class="stat-value"><%= userStats.translations_created %></div>
+            <div class="stat-label">Translations Created</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-info">
+            <div class="stat-value"><%= userStats.translations_reviewed %></div>
+            <div class="stat-label">Translations Reviewed</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">📝</div>
+          <div class="stat-info">
+            <div class="stat-value"><%= userStats.keys_created %></div>
+            <div class="stat-label">Keys Created</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🔑</div>
+          <div class="stat-info">
+            <div class="stat-value"><%= userStats.api_keys_count %></div>
+            <div class="stat-label">API Keys</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid" style="margin-top: 32px;">
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h2>User Information</h2>
+          </div>
+          <div class="card-body">
+            <div class="list">
+              <div class="list-item">
+                <div class="list-item-content">
+                  <div class="list-item-title">Role</div>
+                  <div class="list-item-subtitle"><span class="role-badge role-<%= user.role %>"><%= user.role %></span></div>
+                </div>
+              </div>
+              <div class="list-item">
+                <div class="list-item-content">
+                  <div class="list-item-title">Status</div>
+                  <div class="list-item-subtitle">
+                    <span class="badge" style="background: <%= user.is_active ? 'var(--success)' : 'var(--danger)' %>; color: white;">
+                      <%= user.is_active ? 'Active' : 'Inactive' %>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="list-item">
+                <div class="list-item-content">
+                  <div class="list-item-title">Member Since</div>
+                  <div class="list-item-subtitle"><%= new Date(user.created_at).toLocaleDateString() %></div>
+                </div>
+              </div>
+              <div class="list-item">
+                <div class="list-item-content">
+                  <div class="list-item-title">Last Login</div>
+                  <div class="list-item-subtitle">
+                    <% if (user.last_login) { %>
+                      <%= new Date(user.last_login).toLocaleString() %>
+                    <% } else { %>
+                      Never
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h2>Recent Activity</h2>
+          </div>
+          <div class="card-body">
+            <% if (recentActivity.length === 0) { %>
+              <p class="empty-state">No activity yet</p>
+            <% } else { %>
+              <div class="activity-list">
+                <% recentActivity.forEach(activity => { %>
+                  <div class="activity-item">
+                    <div class="activity-icon">📌</div>
+                    <div class="activity-content">
+                      <div class="activity-text"><%= activity.details || activity.action %></div>
+                      <div class="activity-time"><%= new Date(activity.created_at).toLocaleString() %></div>
+                    </div>
+                  </div>
+                <% }); %>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <% if (apiKeys.length > 0) { %>
+        <div class="card" style="margin-top: 32px;">
+          <div class="card-header">
+            <h2>API Keys</h2>
+          </div>
+          <div class="card-body">
+            <div class="list">
+              <% apiKeys.forEach(key => { %>
+                <div class="list-item">
+                  <div class="list-item-content">
+                    <div class="list-item-title"><%= key.name %></div>
+                    <div class="list-item-subtitle">
+                      <% JSON.parse(key.permissions).forEach(perm => { %>
+                        <span class="permission-badge"><%= perm %></span>
+                      <% }); %>
+                    </div>
+                  </div>
+                  <div class="list-item-meta">
+                    <% if (key.last_used) { %>
+                      Last used: <%= new Date(key.last_used).toLocaleDateString() %>
+                    <% } else { %>
+                      Never used
+                    <% } %>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </main>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Edit User</h2>
+        <button class="modal-close" onclick="closeEditModal()">&times;</button>
+      </div>
+      <form action="/users/<%= user.id %>/update" method="POST">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="username">Username *</label>
+            <input type="text" id="username" name="username" value="<%= user.username %>" required>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input type="email" id="email" name="email" value="<%= user.email %>" required>
+          </div>
+
+          <div class="form-group">
+            <label for="role">Role *</label>
+            <select id="role" name="role" required>
+              <option value="viewer" <%= user.role === 'viewer' ? 'selected' : '' %>>Viewer</option>
+              <option value="translator" <%= user.role === 'translator' ? 'selected' : '' %>>Translator</option>
+              <option value="manager" <%= user.role === 'manager' ? 'selected' : '' %>>Manager</option>
+              <option value="admin" <%= user.role === 'admin' ? 'selected' : '' %>>Admin</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn" onclick="closeEditModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/theme.js"></script>
+  <script>
+    function openEditModal() {
+      document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+      const modal = document.getElementById('editModal');
+      if (event.target === modal) {
+        closeEditModal();
+      }
+    }
+  </script>
+</body>
+</html>
